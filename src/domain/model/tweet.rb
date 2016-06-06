@@ -88,3 +88,11 @@ class TwitterStockRepository
     p @tweet_entity
   end
 end
+
+class FindTwitterStockRepository
+  def initialize(phrase_entity)
+    @phrase_entity = phrase_entity
+  end
+  def find
+  end
+end

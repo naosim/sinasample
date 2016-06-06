@@ -42,4 +42,8 @@ class PhraseEntity
   def twitter_search_repository
     TwitterSearchRepository.new(self)
   end
+
+  def find_twitter_stock_repository
+    FindTwitterStockRepository.new(self)
+  end
 end

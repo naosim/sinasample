@@ -65,20 +65,19 @@ class TwitterSearchRepository
     if @@client == nil then
       @@client = get_twitter_client
     end
-    p @@client
 
-    @@client.search(@phrase_entity.phrase.value, count: 100, lang: 'ja',result_type: "popular")
+    @@client.search(@phrase_entity.phrase.value, count: 100, lang: 'ja',result_type: "recent")
       .take(100)
       .map { |tw|
-        TweetEntity.new(
-          TwitterId.new(tw.id),
-          TwitterUser.new(TwitterUserName.new(tw.user.name), TwitterUserScreenName.new(tw.user.screen_name)),
-          TwitterFullText.new(tw.full_text),
-          TwitterTweetTime.new(tw.created_at),
-          TwitterRetweetCount.new(tw.retweet_count),
-          TwitterFavoriteCount.new(tw.favorite_count),
-          @phrase_entity
-        )
+          TweetEntity.new(
+            TwitterId.new(tw.id),
+            TwitterUser.new(TwitterUserName.new(tw.user.name), TwitterUserScreenName.new(tw.user.screen_name)),
+            TwitterFullText.new(tw.full_text),
+            TwitterTweetTime.new(tw.created_at),
+            TwitterRetweetCount.new(tw.retweet_count),
+            TwitterFavoriteCount.new(tw.favorite_count),
+            @phrase_entity
+          )
       }
       .select {|tweet_entity|
         p tweet_entity
@@ -117,5 +116,22 @@ class TwitterStockRepository
         @tweet_entity.phrase_entity.id.value
       )
     end
+  end
+end
+
+class FindTwitterStockRepository
+  @@db = getDb()
+  def find
+    @@db.execute("SELECT * FROM stock_tweet where phrase_id = ? ORDER BY valiable_count DESC", @phrase_entity.id.value).map {|row|
+      TweetEntity.new(
+        TwitterId.new(row[0]),
+        TwitterUser.new(TwitterUserName.new(row[1]), TwitterUserScreenName.new(row[2])),
+        TwitterFullText.new(row[3]),
+        TwitterTweetTime.new(row[4]),
+        TwitterRetweetCount.new(row[5]),
+        TwitterFavoriteCount.new(row[6]),
+        @phrase_entity
+      )
+    }
   end
 end

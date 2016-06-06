@@ -1,46 +1,43 @@
-# require 'sinatra'
+require 'sinatra'
 require 'json'
-require './src/domain/service/AddWordService.rb'
 require './src/domain/model/phrase.rb'
 require './src/infra/datasource/datasource.rb'
 
 require './src/lib/package.rb'
-# datasource
-# wordRepositoryOnMemory = WordRepositoryOnMemory.new
 
-# service
-# addNewService = AddWordService.new wordRepositoryOnMemory
+require './src/domain/service/ShowGoodTweetService.rb'
+require './src/domain/service/TwitterSearchService.rb'
 
-# get '/word/add' do
-#   res = addNewService.add params['word']
-#   JSON.generate res
-#
-# end
-#
-# post '/edit' do
-#   body = request.body.read
-#
-#   if body == ''
-#     status 400
-#   else
-#     body.to_json
-#   end
-# end
-#
-# get '/' do
-#   send_file File.join(settings.public_folder, 'index.html')
-# end
-#
-# get '/*/' do |path|
-#   send_file File.join(settings.public_folder, path, 'index.html')
-# end
-#
-# value = PhraseEntity.new
-# p value.isNotExist
-#
-# TwitterSearchRepositoryNet.new.search(Phrase.new('java'))
+get '/show' do
+  list = ShowGoodTweetService.new.show.map {|tweet_entity_list|
+    tweet_entity_list.map {|tweet_entity|
+      {
+        id: tweet_entity.id.value,
+        user: {
+          name: tweet_entity.user.name.value,
+          screen_name: tweet_entity.user.screen_name.value,
+        },
+        phrase_entity: {
+          phrase_id: tweet_entity.phrase_entity.id.value,
+          phrase: tweet_entity.phrase_entity.phrase.value,
+        },
+        full_text: tweet_entity.full_text.value,
+        valiable_count: tweet_entity.valiable_count.value
+      }
+    }
+  }
+  JSON.generate(list)
+end
 
-# Phrase.new('java').phrase_repository.save
-FindPhraseEntityRepository.new.search()[0].twitter_search_repository.search_twitter.each {|entity|
-  entity.twitter_stock_repository.overwrite
-}
+get '/search' do
+  TwitterSearchService.new.search
+  "OK"
+end
+
+get '/' do
+  send_file File.join(settings.public_folder, 'index.html')
+end
+
+get '/*/' do |path|
+  send_file File.join(settings.public_folder, path, 'index.html')
+end
