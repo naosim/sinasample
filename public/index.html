@@ -1,1 +1,24 @@
-<h1>hello</h1>
+<script src="/js/nanoajax.js" type="text/javascript"></script>
+<style>
+td {
+  border-width: 1px;
+  border-color: #000;
+  border-style: solid;
+}
+</style>
+<h1>hello html</h1>
+<div class="main"></div>
+
+<script type="text/javascript">
+
+// タイトル取得
+nanoajax.ajax({url:'show'}, (code, res) => {
+  res = JSON.parse(res);
+  var html = '<table>';
+  html += res[0].map((tweet) => {
+    return `<tr><td>${tweet.user.name}</td><td>${tweet.full_text}</td><td>${tweet.valiable_count}</td></tr>`
+  }).join('\n') + '</table>'
+  console.log(html);
+  document.querySelector('.main').innerHTML = html;
+});
+</script>
