@@ -16,9 +16,11 @@ nanoajax.ajax({url:'show'}, (code, res) => {
   res = JSON.parse(res);
   var html = '<table>';
   html += res[0].map((tweet) => {
-    return `<tr><td>${tweet.user.name}</td><td>${tweet.full_text}</td><td>${tweet.valiable_count}</td></tr>`
+    console.log();
+    console.log(new Date(tweet.tweet_time.slice(0, 19).split('-').join('/')))
+    return `<tr><td>${tweet.user.screen_name}</td><td>${tweet.full_text}</td><td>${tweet.valiable_count}</td><td><a href="${tweet.url}">link</a></td></tr>`;
   }).join('\n') + '</table>'
-  console.log(html);
+  // console.log(html);
   document.querySelector('.main').innerHTML = html;
 });
 </script>

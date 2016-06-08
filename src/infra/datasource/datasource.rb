@@ -6,7 +6,7 @@ require 'twitter'
 
 db = SQLite3::Database.new("test.db")
 sql = <<-EOF
-create table phrase (
+CREATE TABLE IF NOT EXISTS phrase (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   phrase  TEXT,
   create_datetime DATE
@@ -14,12 +14,13 @@ create table phrase (
 EOF
 
 sql2 = <<-EOF
-create table stock_tweet (
+CREATE TABLE IF NOT EXISTS stock_tweet (
   id TEXT PRIMARY KEY,
   user_name,
   user_screen_name,
   full_text,
-  tweet_time,
+  tweet_time DATE,
+  url,
   retweet_count INTEGER,
   favorite_count INTEGER,
   valiable_count INTEGER,
@@ -28,8 +29,9 @@ create table stock_tweet (
   update_datetime DATE
 );
 EOF
-# db.execute(sql)
-# db.execute(sql2)
+db.execute(sql)
+# db.execute("drop table stock_tweet");
+db.execute(sql2)
 
 def getDb
   db = SQLite3::Database.new("test.db")
@@ -50,9 +52,9 @@ class PhraseEntityRepository
   end
 end
 
-class FindPhraseEntityRepository
+class C検索フレーズリポジトリ
   @@db = getDb()
-  def search
+  def すべて取得
     @@db.execute("SELECT * FROM phrase").map {|row|
       PhraseEntity.new(PhraseId.new(row[0]), Phrase.new(row[1]))
     }
@@ -61,7 +63,7 @@ end
 
 class TwitterSearchRepository
   @@client = nil
-  def search_twitter
+  def 検索
     if @@client == nil then
       @@client = get_twitter_client
     end
@@ -69,15 +71,19 @@ class TwitterSearchRepository
     @@client.search(@phrase_entity.phrase.value, count: 100, lang: 'ja',result_type: "recent")
       .take(100)
       .map { |tw|
-          TweetEntity.new(
-            TwitterId.new(tw.id),
-            TwitterUser.new(TwitterUserName.new(tw.user.name), TwitterUserScreenName.new(tw.user.screen_name)),
-            TwitterFullText.new(tw.full_text),
-            TwitterTweetTime.new(tw.created_at),
-            TwitterRetweetCount.new(tw.retweet_count),
-            TwitterFavoriteCount.new(tw.favorite_count),
-            @phrase_entity
-          )
+        if tw.retweet? then
+          tw = tw.retweeted_tweet
+        end
+        TweetEntity.new(
+          TwitterId.new(tw.id),
+          TwitterUser.new(TwitterUserName.new(tw.user.name), TwitterUserScreenName.new(tw.user.screen_name)),
+          TwitterFullText.new(tw.full_text),
+          TwitterTweetTime.new(tw.created_at),
+          TweetUrl.new(tw.url.to_s),
+          TwitterRetweetCount.new(tw.retweet_count),
+          TwitterFavoriteCount.new(tw.favorite_count),
+          @phrase_entity
+        )
       }
       .select {|tweet_entity|
         p tweet_entity
@@ -91,7 +97,8 @@ class TwitterStockRepository
   def initialize(tweet_entity)
     @tweet_entity = tweet_entity
   end
-  def overwrite
+  def 上書き保存
+    p @tweet_entity.user.screen_name.value
     is_exist = @@db.execute("SELECT count(*) FROM stock_tweet WHERE id = ?", @tweet_entity.id.value)[0][0] > 0
     if is_exist then
       @@db.execute(
@@ -102,14 +109,14 @@ class TwitterStockRepository
         @tweet_entity.id.value
       )
     else
-      p "insert"
       @@db.execute(
-        "insert into stock_tweet values (?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, current_timestamp)",
+        "insert into stock_tweet values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, current_timestamp)",
         @tweet_entity.id.value,
         @tweet_entity.user.name.value,
         @tweet_entity.user.screen_name.value,
         @tweet_entity.full_text.value,
-        @tweet_entity.tweet_time.value.to_s,
+        @tweet_entity.tweet_time.value.strftime("%Y-%m-%d %X:%M:%S"),
+        @tweet_entity.url.value,
         @tweet_entity.retweet_count.value.to_i,
         @tweet_entity.favorite_count.value.to_i,
         @tweet_entity.valiable_count.value.to_i,
@@ -119,17 +126,18 @@ class TwitterStockRepository
   end
 end
 
-class FindTwitterStockRepository
+class C保存済みツイート検索リポジトリ
   @@db = getDb()
-  def find
+  def 検索
     @@db.execute("SELECT * FROM stock_tweet where phrase_id = ? ORDER BY valiable_count DESC", @phrase_entity.id.value).map {|row|
       TweetEntity.new(
         TwitterId.new(row[0]),
         TwitterUser.new(TwitterUserName.new(row[1]), TwitterUserScreenName.new(row[2])),
         TwitterFullText.new(row[3]),
         TwitterTweetTime.new(row[4]),
-        TwitterRetweetCount.new(row[5]),
-        TwitterFavoriteCount.new(row[6]),
+        TweetUrl.new(row[5]),
+        TwitterRetweetCount.new(row[6]),
+        TwitterFavoriteCount.new(row[7]),
         @phrase_entity
       )
     }

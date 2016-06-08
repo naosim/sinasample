@@ -19,8 +19,8 @@ class PhraseEntityRepository
   end
 end
 
-class FindPhraseEntityRepository
-  def search
+class C検索フレーズリポジトリ
+  def すべて取得
   end
 end
 
@@ -39,11 +39,11 @@ class PhraseEntity
     @phrase = phrase
   end
 
-  def twitter_search_repository
+  def twitter検索リポジトリ
     TwitterSearchRepository.new(self)
   end
 
-  def find_twitter_stock_repository
-    FindTwitterStockRepository.new(self)
+  def 保存済みツイート
+    C保存済みツイート検索リポジトリ.new(self)
   end
 end

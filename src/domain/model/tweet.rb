@@ -37,6 +37,9 @@ end
 class ValiableCount < ValueObject
 end
 
+class TweetUrl < ValueObject
+end
+
 class TwitterUser
   attr_reader :name, :screen_name
   def initialize(name, screen_name)
@@ -46,8 +49,8 @@ class TwitterUser
 end
 
 class TweetEntity
-  attr_reader :id, :user, :full_text, :tweet_time, :retweet_count, :favorite_count, :phrase_entity
-  def initialize(twitter_id, twitter_user, full_text, tweet_time, retweet_count, favorite_count, phrase_entity)
+  attr_reader :id, :user, :full_text, :tweet_time, :url, :retweet_count, :favorite_count, :phrase_entity
+  def initialize(twitter_id, twitter_user, full_text, tweet_time, url, retweet_count, favorite_count, phrase_entity)
     @id = twitter_id
     @user = twitter_user
     @full_text = full_text
@@ -55,13 +58,14 @@ class TweetEntity
     @retweet_count = retweet_count
     @favorite_count = favorite_count
     @phrase_entity = phrase_entity
+    @url = url
   end
 
   def valiable_count
     ValiableCount.new(@favorite_count.value + @retweet_count.value)
   end
 
-  def twitter_stock_repository
+  def twitter保存リポジトリ
     TwitterStockRepository.new(self)
   end
 end
@@ -76,7 +80,7 @@ class TwitterSearchRepository
   def initialize(phrase_entity)
     @phrase_entity = phrase_entity
   end
-  def search_twitter
+  def 検索
   end
 end
 
@@ -84,15 +88,15 @@ class TwitterStockRepository
   def initialize(tweet_entity)
     @tweet_entity = tweet_entity
   end
-  def overwrite
+  def 上書き保存
     p @tweet_entity
   end
 end
 
-class FindTwitterStockRepository
+class C保存済みツイート検索リポジトリ
   def initialize(phrase_entity)
     @phrase_entity = phrase_entity
   end
-  def find
+  def 検索
   end
 end
